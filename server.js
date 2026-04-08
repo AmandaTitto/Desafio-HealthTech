@@ -7,7 +7,7 @@ const app = express();
 
 app.use(express.json());
 
-// == 2.Porta
+// == 2.Porta do Site
 
 const PORT = 3000;
 
@@ -27,7 +27,8 @@ app.get("/", (req,res) => {
         <body>
             <h1> HealthTech </h1>
             <h2> Prontuários dos Pacientes </h2>
-            <p> Adicione o "/pacientes" no enderço do site para acesso aos prontuarios</p>
+            <p> Adicione o "/pacientes" no enderço do site para acesso aos prontuarios </p>
+            <p> Após o passo acima, adicione "/"nome_do_paciente"" para verificar o histórico uma pessoa específica </p>
         </body>
         `
     );
@@ -45,4 +46,35 @@ app.get("/pacientes", async (req,res) => {
     );
 
     res.json(prontuarios);
+});
+
+app.get("/pacientes/:nome_do_paciente", async (req,res) => {
+    const {nome_do_paciente} = req.params;
+    
+    const db = await criarBanco();
+
+    const casosDosPacientes = await db.all(
+        `
+        SELECT * FROM pacientes WHERE nome_do_paciente = ?
+        ` , [nome_do_paciente]
+    );
+
+    res.json(casosDosPacientes);
+
+});
+
+app.post("/pacientes", async (req,res) => {
+    const {data_do_atendimento, nome_do_paciente, endereco, telefone, historico_do_atendimento, observacoes} = req.body;
+        
+    const db = await criarBanco();
+
+    await db.run(
+        `
+        INSERT INTO pacientes(data_do_atendimento, nome_do_paciente, endereco, telefone, historico_do_atendimento, observacoes) VALUES
+        (?, ?, ?, ?, ?, ?)
+        ` , [data_do_atendimento, nome_do_paciente, endereco, telefone, historico_do_atendimento, observacoes]
+    );
+
+    res.send(`Consulta de ${nome_do_paciente} em ${data_do_atendimento} realizada com sucesso`);
+
 });
